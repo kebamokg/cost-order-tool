@@ -1,12 +1,36 @@
+import os
 from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine, Field
+from sqlalchemy.engine import URL
 
-# Database Configuration
-sqlite_file_name = "procurement.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args, echo=True)  # `echo=True` logs SQL queries (debug)
+# Database Configuration - Supports both SQLite (development) and PostgreSQL (production)
+def get_database_url():
+    """Determine database URL based on environment"""
+    if "RENDER" in os.environ:
+        # PostgreSQL for production (Render)
+        return URL.create(
+            drivername="postgresql",
+            username=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            host=os.getenv("DB_HOST"),
+            database=os.getenv("DB_NAME", "procurement"),
+            port=5432
+        )
+    else:
+        # SQLite for development
+        sqlite_file_name = "procurement.db"
+        return f"sqlite:///{sqlite_file_name}"
+
+# Create engine with appropriate configuration
+database_url = get_database_url()
+
+if "sqlite" in str(database_url).lower():
+    connect_args = {"check_same_thread": False}
+    engine = create_engine(database_url, connect_args=connect_args, echo=True)
+else:
+    # PostgreSQL doesn't need connect_args
+    engine = create_engine(database_url, echo=True)
 
 def create_db_and_tables():
     """Create all database tables defined in SQLModel models."""
