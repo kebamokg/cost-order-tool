@@ -37,6 +37,16 @@ def check_budget_alerts(budget: Budget) -> Optional[Dict[str, Any]]:
         }
     return None
 
+# ===== DATABASE INITIALIZATION ENDPOINT =====
+@app.post("/init-db")
+def initialize_database():
+    """Initialize database tables (for first-time setup on Render)"""
+    try:
+        create_db_and_tables()
+        return {"message": "Database tables created successfully", "status": "success"}
+    except Exception as e:
+        return {"message": f"Database initialization failed: {str(e)}", "status": "error"}
+
 # ===== ORDER ENDPOINTS =====
 @app.post("/orders/", response_model=Order)
 def create_order(order: Order, session: SessionDep):
