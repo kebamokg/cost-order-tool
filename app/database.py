@@ -2,35 +2,33 @@ import os
 from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
-from sqlalchemy.engine import URL
 
 # Database Configuration - Supports both SQLite (development) and PostgreSQL (production)
 def get_database_url():
     """Determine database URL based on environment"""
     if "RENDER" in os.environ:
-        # PostgreSQL for production (Render)
-        return URL.create(
-            drivername="postgresql",
-            username=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            database=os.getenv("DB_NAME", "procurement"),
-            port=5432
-        )
+        # PostgreSQL for production (Render) - use direct connection string format
+        db_user = os.getenv("DB_USER")
+        db_password = os.getenv("DB_PASSWORD")
+        db_host = os.getenv("DB_HOST")
+        db_name = os.getenv("DB_NAME", "procurement")
+        
+        return f"postgresql://{db_user}:{db_password}@{db_host}:5432/{db_name}"
     else:
         # SQLite for development
         sqlite_file_name = "procurement.db"
         return f"sqlite:///{sqlite_file_name}"
 
-# Create engine with appropriate configuration
+# Get database URL
 database_url = get_database_url()
 
-if "sqlite" in str(database_url).lower():
+# Set connection arguments based on database type
+if database_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 else:
     connect_args = {}
 
-# Create engine (moved outside if/else for consistency)
+# Create database engine
 engine = create_engine(database_url, connect_args=connect_args, echo=True)
 
 def create_db_and_tables():
