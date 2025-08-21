@@ -6,6 +6,6 @@ services:
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13.7
+        value: 3.11.0  
       - key: DATABASE_URL
-        value: postgresql://procurement_db_4d2t_user:oCt4n5veZAP8IYm0kf7YvA08lYRBK4Nf@dpg-d2ipjpre5dus73b9avg0-a.oregon-postgres.render.com:5432/procurement_db_4d2t
+        value: postgresql://procurement_db_4d2t_user:oCt4n5veZAP8IYm0kf7YvA08lYRBK4Nf@dpg-d2ipjpre5dus73b9avg0-a.oregon-postgres.render.com/procurement_db_4d2t
