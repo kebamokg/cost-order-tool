@@ -3,6 +3,12 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
 
+import sqlalchemy.dialects.postgresql
+
+sqlalchemy.dialects.postgresql.psycopg2.dialect.driver = "psycopg"
+os.environ['SQLALCHEMY_WARN_20'] = '1'
+os.environ['SQLALCHEMY_SILENCE_UBER_WARNING'] = '1'
+
 def get_database_url():
     """Determine database URL based on environment"""
     if "RENDER" in os.environ:
