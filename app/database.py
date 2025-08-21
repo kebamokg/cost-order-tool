@@ -9,9 +9,14 @@ def get_database_url():
         # Use the connection string provided by Render
         database_url = os.getenv("DATABASE_URL")
         
+        # Debug: Print the URL to check it's being read
+        print(f"DEBUG: DATABASE_URL from env = {database_url}")
+        
         # Convert postgres:// to postgresql:// for SQLAlchemy compatibility
         if database_url and database_url.startswith("postgres://"):
-            return database_url.replace("postgres://", "postgresql://", 1)
+            converted_url = database_url.replace("postgres://", "postgresql://", 1)
+            print(f"DEBUG: Converted URL = {converted_url}")
+            return converted_url
         
         return database_url
     else:
@@ -21,22 +26,37 @@ def get_database_url():
 # Get database URL
 database_url = get_database_url()
 
+# Debug print
+print(f"DEBUG: Final database_url = {database_url}")
+
 # Set connection arguments based on database type
 connect_args = {}
 if database_url and database_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
-# Create database engine
-engine = create_engine(database_url, connect_args=connect_args, echo=True)
+# Create database engine only if URL is valid
+if database_url:
+    engine = create_engine(database_url, connect_args=connect_args, echo=True)
+    print("DEBUG: Database engine created successfully")
+else:
+    engine = None
+    print("ERROR: database_url is None - check DATABASE_URL environment variable")
 
 def create_db_and_tables():
     """Create all database tables defined in SQLModel models."""
-    SQLModel.metadata.create_all(engine)
+    if engine:
+        SQLModel.metadata.create_all(engine)
+        print("DEBUG: Database tables created successfully")
+    else:
+        print("ERROR: Cannot create tables - no database engine")
 
 def get_session():
     """Dependency for FastAPI endpoints to get a database session."""
-    with Session(engine) as session:
-        yield session
+    if engine:
+        with Session(engine) as session:
+            yield session
+    else:
+        raise Exception("Database not configured - check DATABASE_URL environment variable")
 
 # Type annotation for FastAPI dependency injection
 SessionDep = Annotated[Session, Depends(get_session)]
